@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">The Movie Database</string>
+    <string name="error">Unknown error</string>
+    <string name="downloading_image">Downloading Image…</string>
+    <string name="popularity">Popularity</string>
+    <string name="releaseDate">Release date:</string>
+    <string name="revenue">Revenue:</string>
+    <string name="search">Search</string>
+    <string name="no_search_result">No search result</string>
+
+</resources>
