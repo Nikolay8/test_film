@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.niko8.test_film.R
@@ -31,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     private var searchPage = 1
     private val apiClient = ApiClient()
 
+    private lateinit var vm: MainViewModel
+
     companion object {
         const val ERROR_TAG = "ERROR"
         const val DETAIL_FRAGMENT_TAG = "detailFragmentTag"
@@ -39,6 +42,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        Log.d("AAA", "Activity Created")
+        vm = ViewModelProvider(this).get(MainViewModel::class.java)
+
         setContentView(R.layout.activity_main)
 
         initViews()
