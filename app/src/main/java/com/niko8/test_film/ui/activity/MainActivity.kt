@@ -8,13 +8,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.niko8.test_film.R
 import com.niko8.test_film.data.PageResponse
 import com.niko8.test_film.network.ApiClient
-import com.niko8.test_film.network.OnResultListener
 import com.niko8.test_film.ui.adapter.FilmItemAdapter
 import com.niko8.test_film.ui.fragments.DetailFragment
 
@@ -44,12 +44,35 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         Log.d("AAA", "Activity Created")
-        vm = ViewModelProvider(this).get(MainViewModel::class.java)
+        vm = ViewModelProvider(this)[MainViewModel::class.java]
 
         setContentView(R.layout.activity_main)
 
         initViews()
-        getPage(currentPage)
+        vm.getPage(currentPage)
+        vm.getFilmList().observe(this, filmListObserver)
+        vm.getSearchFilmList().observe(this, searchFilmListObserver)
+        vm.getErrorData().observe(this, errorDataObserver)
+    }
+
+    private var filmListObserver = Observer<List<PageResponse.FilmModel>>
+    {
+        filmList.addAll(it)
+        updatedAdapter(false, filmList)
+    }
+
+    private var searchFilmListObserver = Observer<List<PageResponse.FilmModel>>
+    {
+        if (searchPage == 1) {
+            searchFilmList.clear()
+        }
+        searchFilmList.addAll(it)
+        updatedAdapter(true, searchFilmList)
+    }
+
+    private var errorDataObserver = Observer<String>
+    {
+        showErrorToast()
     }
 
     override fun onBackPressed() {
@@ -73,48 +96,13 @@ class MainActivity : AppCompatActivity() {
                 searchRequest = p0.toString()
                 if (searchRequest.isNullOrEmpty()) {
                     clearSearchData()
-                    getPage(currentPage)
+                    vm.getPage(currentPage)
                 } else {
-                    searchByString(searchRequest)
+                    vm.searchByString(searchRequest, searchPage)
                 }
                 return true
             }
-
         })
-    }
-
-    private fun getPage(page: Int) {
-        apiClient.getDataPage(page, object : OnResultListener {
-            override fun onSuccess(pageResponse: PageResponse) {
-                filmList.addAll(pageResponse.results)
-                updatedAdapter(false, filmList)
-            }
-
-            override fun onError(message: String?) {
-                Log.e(ERROR_TAG, message.toString())
-                showErrorToast()
-            }
-        })
-    }
-
-    private fun searchByString(searchRequest: String?) {
-        if (!searchRequest.isNullOrEmpty()) {
-            apiClient.searchFilm(searchRequest, searchPage, false, object : OnResultListener {
-                override fun onSuccess(pageResponse: PageResponse) {
-                    if (searchPage == 1) {
-                        searchFilmList.clear()
-                    }
-                    searchFilmList.addAll(pageResponse.results)
-                    updatedAdapter(true, searchFilmList)
-                }
-
-                override fun onError(message: String?) {
-                    Log.e(ERROR_TAG, message.toString())
-                    showErrorToast()
-                }
-
-            })
-        }
     }
 
     private fun updatedAdapter(
@@ -132,7 +120,7 @@ class MainActivity : AppCompatActivity() {
                         override fun nextPageRandom() {
                             if (searchPage + 1 <= MAX_PAGES_LIMIT) {
                                 searchPage += 1
-                                searchByString(searchRequest)
+                                vm.searchByString(searchRequest, searchPage)
                             }
                         }
 
@@ -159,7 +147,7 @@ class MainActivity : AppCompatActivity() {
                         override fun nextPageRandom() {
                             if (currentPage + 1 <= MAX_PAGES_LIMIT) {
                                 currentPage += 1
-                                getPage(currentPage)
+                                vm.getPage(currentPage)
                             }
                         }
 
